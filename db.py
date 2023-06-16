@@ -1,6 +1,6 @@
+import os
 
 from dataclasses import dataclass
-import os
 from pathlib import Path
 
 
@@ -10,11 +10,11 @@ class DB:
         os.makedirs(self.path, exist_ok=True)
 
     def __getitem__(self, key):
-        with open(self.path / key) as f:
+        with open(self.path / key, encoding='utf-8') as f:
             return f.read()
 
     def __setitem__(self, key, val):
-        with open(self.path / key, 'w') as f:
+        with open(self.path / key, 'w', encoding='utf-8') as f:
             f.write(val)
 
 
