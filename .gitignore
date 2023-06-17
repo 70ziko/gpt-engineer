@@ -31,4 +31,6 @@ Thumbs.db
 
 # this application's specific files
 archive
-seedowanie
+
+# any log file
+*log.txt
