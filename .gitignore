@@ -45,4 +45,4 @@ archive
 
 # Ignore GPT Engineer files
 projects
-my-new-project/
+!projects/example
