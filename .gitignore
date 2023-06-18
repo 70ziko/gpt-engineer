@@ -38,5 +38,6 @@ archive
 # any log file
 *log.txt
 
-# ignore all project files
+# Ignore GPT Engineer files
 projects
+my-new-project/
