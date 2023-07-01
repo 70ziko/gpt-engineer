@@ -1,6 +1,5 @@
 import os
 import re
-import os
 
 
 def parse_chat(chat):  # -> List[Tuple[str, str]]:
