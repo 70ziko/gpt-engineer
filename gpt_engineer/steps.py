@@ -9,12 +9,7 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from termcolor import colored
 
 from gpt_engineer.ai import AI
-from gpt_engineer.chat_to_files import (
-    format_file_to_input,
-    get_code_strings,
-    overwrite_files,
-    to_files,
-)
+from gpt_engineer.chat_to_files import to_files, getCodeStrings, formatFileToInput
 from gpt_engineer.db import DBs
 from gpt_engineer.file_selector import ask_for_files
 from gpt_engineer.learning import human_input
@@ -25,6 +20,11 @@ Message = Union[AIMessage, HumanMessage, SystemMessage]
 def setup_sys_prompt(dbs: DBs) -> str:
     return (
         dbs.preprompts["generate"] + "\nUseful to know:\n" + dbs.preprompts["philosophy"]
+    )
+
+def setup_sys_prompt_existing_code(dbs: DBs) -> str:
+    return (
+        dbs.preprompts["implement_on_existing"] + "\nUseful to know:\n" + dbs.preprompts["philosophy"]
     )
 
 
@@ -315,6 +315,21 @@ Press enter to proceed with modifications.
     overwrite_files(messages[-1].content.strip(), dbs, replace_files=file_path_info)
     return messages
 
+def improve_existing_code(ai: AI, dbs: DBs):
+    filesInfo = getCodeStrings(dbs.input)
+    messages = [
+        ai.fsystem(setup_sys_prompt_existing_code(dbs)),
+        ai.fuser(f"Instructions: {dbs.input['prompt']}")
+    ]
+    # Add files as input
+    for filename, filestr in filesInfo.items():
+        codeInput = formatFileToInput(filename, filestr)
+        messages.append(ai.fuser(f"{codeInput}"))
+
+    messages = ai.next(messages)
+    to_files(messages[-1]["content"], dbs.workspace)
+    return messages
+
 
 def fix_code(ai: AI, dbs: DBs):
     messages = AI.deserialize_messages(dbs.logs[gen_code.__name__])
@@ -400,7 +415,7 @@ STEPS = {
     Config.USE_FEEDBACK: [use_feedback, gen_entrypoint, execute_entrypoint, human_review],
     Config.EXECUTE_ONLY: [execute_entrypoint],
     Config.EVALUATE: [execute_entrypoint, human_review],
-    Config.IMPROVE_CODE: [improve_existing_code],
+    Config.IMPROVE_CODE: [improve_existing_code]
 }
 
 # Future steps that can be added:
