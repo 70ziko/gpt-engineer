@@ -18,6 +18,7 @@ build/
 venv/
 ENV/
 venv_test_installation/
+.venv/
 
 # IDE-specific files
 .vscode/
