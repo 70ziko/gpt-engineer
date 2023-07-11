@@ -10,7 +10,6 @@ from termcolor import colored
 
 from gpt_engineer.ai import AI
 from gpt_engineer.chat_to_files import (
-    ask_for_files,
     format_file_to_input,
     get_code_strings,
     overwrite_files,

@@ -1,6 +1,4 @@
 import os
-import re
-import sys
 import tkinter as tk
 import tkinter.filedialog as fd
 
@@ -37,7 +35,7 @@ class DisplayablePath(object):
             self.depth = self.parent.depth + 1
 
     @property
-    def display_name(self) -> str:
+    def displayname(self) -> str:
         """
         Get the display name of the file or directory.
 
@@ -104,7 +102,7 @@ class DisplayablePath(object):
             str: The displayable string representation.
         """
         if self.parent is None:
-            return self.display_name
+            return self.displayname
 
         _filename_prefix = (
             self.display_filename_prefix_last
@@ -112,7 +110,7 @@ class DisplayablePath(object):
             else self.display_filename_prefix_middle
         )
 
-        parts = ["{!s} {!s}".format(_filename_prefix, self.display_name)]
+        parts = ["{!s} {!s}".format(_filename_prefix, self.displayname)]
 
         parent = self.parent
         while parent and parent.parent is not None:
@@ -130,18 +128,16 @@ class TerminalFileSelector:
     def __init__(self, root_folder_path: Path) -> None:
         self.number_of_selectable_items = 0
         self.selectable_file_paths: dict[int, str] = {}
-        self.file_path_list: list = []
         self.db_paths = DisplayablePath.make_tree(
-            root_folder_path, parent=None, criteria=is_in_ignoring_extensions
+            root_folder_path, parent=None, criteria=self.is_in_ignoring_extentions
         )
 
     def display(self):
         """
         Select files from a directory and display the selected files.
         """
-        count = 0
+        count = 1
         file_path_enumeration = {}
-        file_path_list = []
         for path in self.db_paths:
             n_digits = len(str(count))
             n_spaces = 3 - n_digits
@@ -152,7 +148,6 @@ class TerminalFileSelector:
             if not path.path.is_dir():
                 print(f"{count}. {spaces_str}{path.displayable()}")
                 file_path_enumeration[count] = path.path
-                file_path_list.append(path.path)
                 count += 1
             else:
                 # By now we do not accept selecting entire dirs.
@@ -162,127 +157,88 @@ class TerminalFileSelector:
                 print(f"{number_space}  {spaces_str}{path.displayable()}")
 
         self.number_of_selectable_items = count
-        self.file_path_list = file_path_list
         self.selectable_file_paths = file_path_enumeration
 
     def ask_for_selection(self) -> List[str]:
-        """
-        Ask user to select files from the terminal after displaying it
-
-        Returns:
-            List[str]: list of selected paths
-        """
         user_input = input(
-            "\nSelect files by entering the numbers separated by commas/spaces or "
-            + "specify range with a dash. "
-            + "Example: 1,2,3-5,7,9,13-15,18,20 (enter 'all' to select everything)"
-            + "\n\nSelect files:"
+            "Select files by entering the numbers separated by spaces or commas: "
         )
+        user_input = user_input.replace(",", " ")
+        selected_files = user_input.split()
         selected_paths = []
-        regex = r"\d+(-\d+)?([, ]\d+(-\d+)?)*"
-
-        if user_input.lower() == "all":
-            selected_paths = self.file_path_list
-        elif re.match(regex, user_input):
+        for file_number_str in selected_files:
             try:
-                user_input = (
-                    user_input.replace("", ",") if " " in user_input else user_input
-                )
-                selected_files = user_input.split(",")
-                for file_number_str in selected_files:
-                    if "-" in file_number_str:
-                        start_str, end_str = file_number_str.split("-")
-                        start = int(start_str)
-                        end = int(end_str)
-                        for num in range(start, end + 1):
-                            selected_paths.append(str(self.selectable_file_paths[num]))
-                    else:
-                        num = int(file_number_str)
-                        selected_paths.append(str(self.selectable_file_paths[num]))
-
+                file_number = int(file_number_str)
+                if 1 <= file_number <= self.number_of_selectable_items:
+                    selected_paths.append(str(self.selectable_file_paths[file_number]))
             except ValueError:
                 pass
-        else:
-            print("Please use a valid number/series of numbers.\n")
-            sys.exit(1)
-
         return selected_paths
 
-def is_in_ignoring_extensions(path: Path) -> bool:
-    """
-    Check if a path is not hidden or in the __pycache__ directory.
+    def is_in_ignoring_extentions(self, path: Path) -> bool:
+        """
+        Check if a path is not hidden or in the __pycache__ directory.
 
-    Args:
-        path: The path to check.
+        Args:
+            path: The path to check.
 
-    Returns:
-        bool: True if the path is not in ignored rules. False otherwise.
-    """
-    is_hidden = not path.name.startswith(".")
-    is_pycache = "__pycache__" not in path.name
-    return is_hidden and is_pycache
+        Returns:
+            bool: True if the path is not in ignored rules. False otherwise.
+        """
+        is_hidden = not path.name.startswith(".")
+        is_pycache = "__pycache__" not in path.name
+        return is_hidden and is_pycache
 
 
 def ask_for_files(db_input) -> dict[str, str]:
-    """
-    Ask user to select files to improve.
-    It can be done by terminal, gui, or using the old selection.
-
-    Returns:
-        dict[str, str]: Dictionary where key = file name and value = file path
-    """
     use_last_string = ""
-    selection_number = 0
-    is_valid_selection = False
-    can_use_last = False
+    selection_number = 1
     if "file_list.txt" in db_input:
         can_use_last = True
         use_last_string = (
-            "2. Use previous file list (available at "
-            + f"{os.path.join(db_input.path, 'file_list.txt')})\n"
+            f"3 - Use previous file list (available at {db_input.path / 'file_list.txt'})"
         )
-    selection_str = f"""How do you want to select the files?
+    selectionstr = f"""
+How do you want to select the files?
+1 - Use terminal
+2 - Use a GUI
+{use_last_string}
 
-0. Use Command-Line.
-1. Use File explorer.
-{use_last_string if len(use_last_string) > 1 else ""}
-Select option and press Enter (default={selection_number}): """
+Select the option and press enter (default=1) : """
     file_path_list = []
-    selected_number_str = input(selection_str)
+    selected_number_str = input(selectionstr)
     if selected_number_str:
-        try:
-            selection_number = int(selected_number_str)
-        except ValueError:
-            print("Invalid number. Select a number from the list above.\n")
-            sys.exit(1)
-    if selection_number == 0:
+        selection_number = int(selected_number_str)
+    is_valid_selection = False
+    if selection_number == 1:
         # Open terminal selection
         file_path_list = terminal_file_selector()
         is_valid_selection = True
-    elif selection_number == 1:
+    elif selection_number == 2:
         # Open GUI selection
         file_path_list = gui_file_selector()
         is_valid_selection = True
     else:
-        if can_use_last and selection_number == 2:
-            # Use previous file list
-            is_valid_selection = True
+        if can_use_last:
+            if selection_number == 3:
+                # Use previous file list
+                is_valid_selection = True
     if not is_valid_selection:
-        print("Invalid number. Select a number from the list above.\n")
-        sys.exit(1)
+        print("Invalid number. Select a number from the list above.")
+        return {}
 
     file_list_string = ""
     file_path_info = {}
-    if not selection_number == 2:
+    if not selection_number == 3:
         # New files
         for file_path in file_path_list:
-            file_list_string += str(file_path) + "\n"
+            file_list_string += file_path + "\n"
             # Return a dict with key=file_name and value=file_path
             file_path_info[os.path.basename(file_path).split("/")[-1]] = file_path
         # Write in file_list so the user can edit and remember what was done
         db_input["file_list.txt"] = file_list_string
     else:
-        # If using the the previous file list, we don't need to write file_list.txt
+        # If using the the previous file list, we dont need to write file_list.txt
         file_list_string = db_input["file_list.txt"]
         for file_path in file_path_list:
             # Return a dict with key=file_name and value=file_path
