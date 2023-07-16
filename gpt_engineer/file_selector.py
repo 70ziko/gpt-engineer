@@ -167,6 +167,12 @@ class TerminalFileSelector:
         self.selectable_file_paths = file_path_enumeration
 
     def ask_for_selection(self) -> List[str]:
+        """
+        Ask user to select files from the terminal after displaying it
+
+        Returns:
+            List[str]: list of selected paths
+        """
         user_input = input(
             "\nSelect files by entering the numbers separated by commas/spaces or specify range with a dash.\nExample: 1,2,3-5,7,9,13-15,18,20 (enter 'all' to select everything)\n\nSelect files: "
         )
@@ -199,6 +205,9 @@ class TerminalFileSelector:
 
         return selected_paths
 
+    def is_in_ignoring_extensions(self, path: Path) -> bool:
+        """
+        Check if a path is not hidden or in the __pycache__ directory.
 
 def is_in_ignoring_extensions(path: Path) -> bool:
     """
@@ -216,6 +225,13 @@ def is_in_ignoring_extensions(path: Path) -> bool:
 
 
 def ask_for_files(db_input) -> dict[str, str]:
+    """
+    Ask user to select files to improve.
+    It can be done by terminal, gui, or using the old selection.
+
+    Returns:
+        dict[str, str]: Dictionary where key = file name and value = file path
+    """
     use_last_string = ""
     selection_number = 0
     is_valid_selection = False
@@ -225,7 +241,11 @@ def ask_for_files(db_input) -> dict[str, str]:
         use_last_string = (
             f"2. Use previous file list (available at {os.path.join(db_input.path, 'file_list.txt')})\n"
         )
-    selection_str = f"""How do you want to select the files?
+    selection_str = f"""
+How do you want to select the files?
+1 - Use terminal
+2 - Use a GUI
+{use_last_string}
 
 0. Use Command-Line.
 1. Use File explorer.
