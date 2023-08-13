@@ -35,22 +35,6 @@ def main(
 
 
 
-    memory_path = input_path / f"{run_prefix}memory"
-    workspace_path = input_path / f"{run_prefix}workspace"
-    # For the improve option take current project as path and add .gpteng folder
-    # By now, ignoring the 'project_path' argument
-    if improve_option:
-        input_path = Path(os.getcwd()).absolute() / ".gpteng"
-        input_path.mkdir(parents=True, exist_ok=True)
-        # The default option for the --improve is the IMPROVE_CODE, not DEFAULT
-        # I know this looks ugly, not sure if it is the best way to do that...
-        # we can change that in the future.
-        if steps_config == steps.Config.DEFAULT:
-            steps_config = steps.Config.IMPROVE_CODE
-        memory_path = input_path / f"{run_prefix}memory"
-        workspace_path = Path(os.getcwd()).absolute()
-
-    memory_path = input_path / "memory"
     workspace_path = input_path / "workspace"
     # For the improve option take current project as path and add .gpteng folder
     # By now, ignoring the 'project_path' argument
