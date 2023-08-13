@@ -1,10 +1,11 @@
 import logging
 import os
-import shutil
+from pathlib import Path
 
 from pathlib import Path
 
 import typer
+from dotenv import load_dotenv
 
 from gpt_engineer.ai import AI
 from gpt_engineer.collect import collect_learnings
@@ -13,6 +14,18 @@ from gpt_engineer.learning import collect_consent
 from gpt_engineer.steps import STEPS, Config as StepsConfig
 
 app = typer.Typer()
+
+def load_env_if_needed():
+    """
+    Check if API KEY env variable exist
+    If it doesn’t, call load_dotenv
+    """
+    if os.getenv("OPENAI_API_KEY") is None:
+        load_dotenv()
+        # After attempting to load from .env, check again
+        if os.getenv("OPENAI_API_KEY") is None:
+            raise ValueError("Cannot run the program without OPENAI_API_KEY environment variable.\nPlease set it in your environment or in a .env file.")
+
 
 
 @app.command()
@@ -33,19 +46,9 @@ def main(
 ):
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
 
+    load_env_if_needed()
 
-
-    # For the improve option take current project as path and add .gpteng folder
-    # By now, ignoring the 'project_path' argument
-    if improve_option:
-        input_path = Path(os.getcwd()).absolute() / ".gpteng"
-        input_path.mkdir(parents=True, exist_ok=True)
-        # The default option for the --improve is the IMPROVE_CODE, not DEFAULT
-        if steps_config == StepsConfig.DEFAULT:
-            steps_config = StepsConfig.IMPROVE_CODE
-        memory_path = input_path / "memory"
-        workspace_path = Path(os.getcwd()).absolute()
-
+    model = fallback_model(model)
     ai = AI(
         model_name=model,
         temperature=temperature,
