@@ -41,6 +41,13 @@ def main(
 ):
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
 
+    # For the improve option take current project as path and add .gpteng folder
+    # By now, ignoring the 'project_path' argument
+    if improve_option:
+        # The default option for the --improve is the IMPROVE_CODE, not DEFAULT
+        if steps_config == StepsConfig.DEFAULT:
+            steps_config = StepsConfig.IMPROVE_CODE
+
     load_env_if_needed()
 
     model = fallback_model(model)
