@@ -1,0 +1,2 @@
+[console_scripts]
+gpt-engineer = gpt_engineer.main:app

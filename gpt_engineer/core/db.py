@@ -233,4 +233,5 @@ def archive(dbs: DBs) -> None:
                 shutil.copy2(item_path, destination_path)
             elif item_path.is_dir():
                 shutil.copytree(item_path, destination_path)
+
     return []

@@ -14,6 +14,17 @@ class DummyDBs:
     project_metadata = {}
 
 
+@dataclass
+class DummyDBs:
+    memory = {}
+    logs = {}
+    preprompts = {}
+    input = {}
+    dbs = DummyDBs()
+    archive = {}
+    project_metadata = {}
+
+
 def test_to_files():
     chat = textwrap.dedent(
         """
