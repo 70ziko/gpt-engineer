@@ -51,20 +51,19 @@ def load_env_if_needed():
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def preprompts_path(use_custom_preprompts: bool, input_path: Path = None) -> Path:
-    original_preprompts_path = Path(__file__).parent.parent / "preprompts"
-    if not use_custom_preprompts:
-        return original_preprompts_path
+def load_prompt(dbs: DBs):
+    if dbs.input.get("prompt"):
+        return dbs.input.get("prompt")
+    
+    if dbs.workspace.get("prompt"):
+        dbs.input["prompt"] = dbs.workspace.get("prompt")
+        del dbs.workspace["prompt"]
+        return dbs.input.get("prompt")
 
-    custom_preprompts_path = input_path / "preprompts"
-    if not custom_preprompts_path.exists():
-        custom_preprompts_path.mkdir()
-
-    for file in original_preprompts_path.glob("*"):
-        if not (custom_preprompts_path / file.name).exists():
-            (custom_preprompts_path / file.name).write_text(file.read_text())
-    return custom_preprompts_path
-
+    dbs.input["prompt"] = input(
+        "\nWhat application do you want gpt-engineer to generate?\n"
+    )
+    return dbs.input.get("prompt")
 
 @app.command()
 def main(
@@ -105,8 +104,6 @@ def main(
 
     if lite_mode:
         assert not improve_mode, "Lite mode cannot improve code"
-        if steps_config == StepsConfig.DEFAULT:
-            steps_config = StepsConfig.LITE
 
     if improve_mode:
         assert (
@@ -123,13 +120,27 @@ def main(
         azure_endpoint=azure_endpoint,
     )
 
-    input_path = Path(project_path).absolute()
-    print("Running gpt-engineer in", input_path, "\n")
 
-    workspace_path = input_path / "workspace"
-    project_metadata_path = input_path / ".gpteng"
+    project_path = os.path.abspath(project_path)  # resolve the string to a valid path (eg a/b/../c to a/c)
+    path = Path(project_path).absolute()
+    print("Running gpt-engineer in", path, "\n")
+
+    workspace_path = path
+    project_metadata_path = path / ".gpteng"
+    input_path = project_metadata_path
     memory_path = project_metadata_path / "memory"
     archive_path = project_metadata_path / "archive"
+    preprompts_path = Path(__file__).parent / "preprompts"
+
+    if use_project_preprompts:
+        project_preprompts_path = path / "preprompts"
+        if not project_preprompts_path.exists():
+            project_preprompts_path.mkdir()
+
+        for file in preprompts_path.glob("*"):
+            if not (project_preprompts_path / file.name).exists():
+                (project_preprompts_path / file.name).write_text(file.read_text())
+        preprompts_path = project_preprompts_path
 
     dbs = DBs(
         memory=DB(memory_path),
@@ -148,11 +159,7 @@ def main(
         StepsConfig.IMPROVE_CODE,
     ]:
         archive(dbs)
-
-        if not dbs.input.get("prompt"):
-            dbs.input["prompt"] = input(
-                "\nWhat application do you want gpt-engineer to generate?\n"
-            )
+        load_prompt(dbs)
 
     steps = STEPS[steps_config]
     for step in steps:
