@@ -20,7 +20,7 @@ class DummyDBs:
     logs = {}
     preprompts = {}
     input = {}
-    dbs = DummyDBs()
+    workspace = {}
     archive = {}
     project_metadata = {}
 
