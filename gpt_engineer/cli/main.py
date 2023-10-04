@@ -66,6 +66,21 @@ def load_prompt(dbs: DBs):
     return dbs.input.get("prompt")
 
 
+def preprompts_path(use_custom_preprompts: bool, input_path: Path = None) -> Path:
+    original_preprompts_path = Path(__file__).parent / "preprompts"
+    if not use_custom_preprompts:
+        return original_preprompts_path
+
+    custom_preprompts_path = input_path / "preprompts"
+    if not custom_preprompts_path.exists():
+        custom_preprompts_path.mkdir()
+
+    for file in original_preprompts_path.glob("*"):
+        if not (custom_preprompts_path / file.name).exists():
+            (custom_preprompts_path / file.name).write_text(file.read_text())
+    return custom_preprompts_path
+
+
 @app.command()
 def main(
     project_path: str = typer.Argument("projects/example", help="path"),
