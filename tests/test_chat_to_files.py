@@ -1,17 +1,7 @@
 from dataclasses import dataclass
 import textwrap
 
-from gpt_engineer.core.chat_to_files import to_files
-
-
-@dataclass
-class DummyDBs:
-    memory = {}
-    logs = {}
-    preprompts = {}
-    input = {}
-    archive = {}
-    project_metadata = {}
+from gpt_engineer.chat_to_files import to_files_and_memory
 
 
 @dataclass
@@ -25,7 +15,7 @@ class DummyDBs:
     project_metadata = {}
 
 
-def test_to_files():
+def test_to_files_and_memory():
     chat = textwrap.dedent(
         """
     This is a sample program.
@@ -44,7 +34,7 @@ def test_to_files():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -76,7 +66,7 @@ def test_to_files_with_square_brackets():
     """
     )
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -103,7 +93,7 @@ def test_files_with_brackets_in_name():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -129,7 +119,7 @@ def test_files_with_file_colon():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -155,7 +145,7 @@ def test_files_with_back_tick():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -182,7 +172,7 @@ def test_files_with_newline_between():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
@@ -209,7 +199,7 @@ def test_files_with_newline_between_header():
     )
 
     dbs = DummyDBs()
-    to_files(chat, dbs)
+    to_files_and_memory(chat, dbs)
 
     assert dbs.memory["all_output.txt"] == chat
 
