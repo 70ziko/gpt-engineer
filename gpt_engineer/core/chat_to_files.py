@@ -83,7 +83,22 @@ def parse_chat(chat) -> List[Tuple[str, str]]:
     return files
 
 
-def to_files(chat: str, dbs: DBs):
+def to_files_and_memory(chat: str, dbs: DBs):
+    """
+    Save chat to memory, and parse chat to extracted file and save them to the workspace.
+
+    Parameters
+    ----------
+    chat : str
+        The chat to parse.
+    dbs : DBs
+        The databases that include the memory and workspace database
+    """
+    dbs.memory["all_output.txt"] = chat
+    to_files(chat, dbs.workspace)
+
+
+def to_files(chat: str, workspace: DB):
     """
     Parse the chat and add all extracted files to the workspace.
 
@@ -94,11 +109,9 @@ def to_files(chat: str, dbs: DBs):
     workspace : DB
         The workspace to add the files to.
     """
-    dbs.memory["all_output.txt"] = chat
-
     files = parse_chat(chat)
     for file_name, file_content in files:
-        dbs.workspace[file_name] = file_content
+        workspace[file_name] = file_content
 
 
 def overwrite_files(chat, dbs: DBs):
